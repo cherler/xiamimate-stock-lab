@@ -15,6 +15,20 @@
 /** 应用挂载的子路径，供前端路由拼接用。根部署时为空串。 */
 export const ROUTE_BASE = (import.meta.env.BASE_URL || "/").replace(/\/$/, "");
 
+/** Only the Pages build enables this; the normal app keeps its existing backend. */
+export const STATIC_PREVIEW = import.meta.env.VITE_STATIC_PREVIEW === "true";
+
+/** Keep query parameters outside the hash so existing company tabs share one router. */
+export function appHref(path: string): string {
+  if (!STATIC_PREVIEW) return ROUTE_BASE + path;
+  const [pathname, query = ""] = path.split("?");
+  return `${ROUTE_BASE}/${query ? `?${query}` : ""}#${pathname}`;
+}
+
+export function appPathname(): string {
+  return STATIC_PREVIEW ? window.location.hash.slice(1) || "/" : window.location.pathname;
+}
+
 /**
  * 接口前缀。
  * - 挂在子路径下（线上，或本机用 scripts/local-gateway.py 验证）→ `<子路径>-api`

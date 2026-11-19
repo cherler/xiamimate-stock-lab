@@ -1,5 +1,5 @@
 import { responseCompany } from "./lib/response";
-import { apiUrl, ROUTE_BASE } from "./config";
+import { apiUrl, ROUTE_BASE, STATIC_PREVIEW, appHref, appPathname } from "./config";
 import { formatDateTime } from "./lib/datetime";
 import { errorMessage } from "./lib/errormessage";
 import { nextCursor } from "./lib/listcursor";
@@ -586,7 +586,7 @@ function Sidebar({
         <div className="sidebar-foot">
           {/* 数据源状态从顶部工具条挪到这里：它是常驻状态而不是操作，
               放在顶部会和平台页眉挤在一起，也和右上角的账号区争注意力。 */}
-          <span className={`sidebar-source sidebar-source--${dataSource}`}><i />{dataSource === "api" ? "StockSDK 已同步" : dataSource === "loading" ? "正在连接" : "API 未连接"}</span>
+          <span className={`sidebar-source sidebar-source--${dataSource}`}><i />{STATIC_PREVIEW ? "虚构样例 · 非实时行情" : dataSource === "api" ? "StockSDK 已同步" : dataSource === "loading" ? "正在连接" : "API 未连接"}</span>
           <div className="sidebar-note"><ShieldCheck size={15} /><strong>只辅助研究，不替你决策</strong></div>
         </div>
       </aside>
@@ -1696,9 +1696,9 @@ function PreferencesPage() {
     <section className="panel">
       <div className="panel-heading"><div><span className="eyebrow">其余设置在各自的页面里</span><h2>去哪里改别的</h2></div></div>
       <div className="pref-rows">
-        {ownerHere === true && <div className="pref-row"><div><strong>同步频率与开关</strong><em>七个后台任务各自的周期、暂停与手动触发。</em></div><a className="text-button" href={`${ROUTE_BASE}/data-sources`}>打开数据状态</a></div>}
-        {ownerHere === true && <div className="pref-row"><div><strong>备份与恢复</strong><em>手动备份、导出研究记录、从备份恢复。</em></div><a className="text-button" href={`${ROUTE_BASE}/backups`}>打开备份与恢复</a></div>}
-        <div className="pref-row"><div><strong>候选策略的条件</strong><em>改门槛、加条件、存成自己的一套。</em></div><a className="text-button" href={`${ROUTE_BASE}/screener`}>打开价值候选</a></div>
+        {ownerHere === true && <div className="pref-row"><div><strong>同步频率与开关</strong><em>七个后台任务各自的周期、暂停与手动触发。</em></div><a className="text-button" href={appHref("/data-sources")}>打开数据状态</a></div>}
+        {ownerHere === true && <div className="pref-row"><div><strong>备份与恢复</strong><em>手动备份、导出研究记录、从备份恢复。</em></div><a className="text-button" href={appHref("/backups")}>打开备份与恢复</a></div>}
+        <div className="pref-row"><div><strong>候选策略的条件</strong><em>改门槛、加条件、存成自己的一套。</em></div><a className="text-button" href={appHref("/screener")}>打开价值候选</a></div>
         <div className="pref-row"><div><strong>模型配置</strong><em>接口地址与密钥在项目根目录的 <code>.env</code> 里（已 gitignore）：<code>MINIMAX_API_KEY</code>、<code>MINIMAX_BASE_URL</code>、<code>MINIMAX_MODEL</code>。没配也能用，规则会独立工作。</em></div><span className="pref-feed-state">改完需重启服务</span></div>
       </div>
     </section>
@@ -7191,7 +7191,7 @@ function TasksPage({ onOpenCompany }: { onOpenCompany: (id: number) => void }) {
   </>;
 }
 
-function routeFromPathname(rawPathname = window.location.pathname): { page: Page; companyId: number | null } {
+function routeFromPathname(rawPathname = appPathname()): { page: Page; companyId: number | null } {
   // 挂在 /stocks/ 下时，浏览器给的是 /stocks/review；先剥掉挂载前缀再匹配
   const pathname = ROUTE_BASE && rawPathname.startsWith(ROUTE_BASE) ? rawPathname.slice(ROUTE_BASE.length) || "/" : rawPathname;
   const companyMatch = pathname.match(/^\/companies\/(\d+)\/?$/);
@@ -7223,7 +7223,7 @@ function routeFromPathname(rawPathname = window.location.pathname): { page: Page
 }
 
 function pathForPage(page: Exclude<Page, "company">): string {
-  return ROUTE_BASE + pathOf(page);
+  return appHref(pathOf(page));
 }
 
 function pathOf(page: Exclude<Page, "company">): string {
@@ -7465,7 +7465,7 @@ export default function App() {
       window.history.replaceState({}, "", pathForPage("reviews"));
     }
   }, []);
-  useEffect(() => { const handlePopState = () => { const route = routeFromPathname(); setPage(route.page); setSelectedCompanyId(route.companyId); setShowCreate(false); }; window.addEventListener("popstate", handlePopState); return () => window.removeEventListener("popstate", handlePopState); }, []);
+  useEffect(() => { const handlePopState = () => { const route = routeFromPathname(); setPage(route.page); setSelectedCompanyId(route.companyId); setShowCreate(false); }; window.addEventListener("popstate", handlePopState); window.addEventListener("hashchange", handlePopState); return () => { window.removeEventListener("popstate", handlePopState); window.removeEventListener("hashchange", handlePopState); }; }, []);
   const asOf = useMemo(() => formatDateTime(dashboard.as_of), [dashboard.as_of]);
   function navigate(next: Exclude<Page, "company">) { window.history.pushState({}, "", pathForPage(next)); setPage(next); setSelectedCompanyId(null); if (next !== "companies") setShowCreate(false); setSidebarOpen(false); }
   // tab：**跳过去要落在能做那件事的地方**，不是公司页的默认标签。
@@ -7478,14 +7478,18 @@ export default function App() {
   // 带上 intent=advocate，到了那一页自己滚过去、把问题填好。
   function openCompany(companyId: number, tab?: string, intent?: string) {
     const suffix = tab ? `?tab=${tab}${intent ? `&do=${intent}` : ""}` : "";
-    window.history.pushState({}, "", `${ROUTE_BASE}/companies/${companyId}${suffix}`);
+    window.history.pushState({}, "", appHref(`/companies/${companyId}${suffix}`));
     setSelectedCompanyId(companyId); setShowCreate(false); setPage("company"); setSidebarOpen(false);
   }
-  function openCreate() { window.history.pushState({}, "", `${ROUTE_BASE}/companies`); setPage("companies"); setSelectedCompanyId(null); setShowCreate(true); setSidebarOpen(false); }
+  function openCreate() { window.history.pushState({}, "", appHref("/companies")); setPage("companies"); setSelectedCompanyId(null); setShowCreate(true); setSidebarOpen(false); }
+  function writeJudgment(symbol?: string) {
+    if (STATIC_PREVIEW) { window.dispatchEvent(new CustomEvent("xiami-preview-note", { detail: { symbol } })); return; }
+    setWriting({ open: true, symbol });
+  }
   function startFirstJudgment() {
     const firstCompany = dashboard.watchlist[0];
     if (firstCompany) {
-      setWriting({ open: true, symbol: firstCompany.symbol });
+      writeJudgment(firstCompany.symbol);
       return;
     }
     openCreate();
@@ -7522,7 +7526,7 @@ export default function App() {
   return <><PlatformHeader /><div className={`app-shell${sidebarCollapsed ? " app-shell--collapsed" : ""}`}><Sidebar open={sidebarOpen} page={page} reviewCount={dashboard.counter_hits} dataSource={dataSource} onClose={() => { setSidebarOpen(false); setSidebarCollapsed(true); }} onNavigate={navigate} /><main className="main-content"><header className="topbar"><button className="icon-button menu-button" aria-label="打开导航" onClick={() => { setSidebarOpen(true); setSidebarCollapsed(false); }}><Menu size={20} /></button><GlobalSearch onOpenCompany={openCompany} onCreated={(company) => { void refreshDashboard(); openCompany(company.id); }} /><div className="topbar-actions"><button type="button" className="secondary-action sa-entry" onClick={() => setAssistantOpen(true)}><MessageCircle size={17}/>问助手</button>
         {/* **常驻。** 这个按钮要对付的不是"字段多"，是"路太长"——
             一闪而过的念头撑不到"先建档、等同步、走到某个页签"那么远。 */}
-        <button className="page-action topbar-write" onClick={() => setWriting({ open: true })}>
+        <button className="page-action topbar-write" onClick={() => writeJudgment()}>
           写下一个判断
         </button>
       </div></header><div className="page-frame"><SectionTabs page={page} onNavigate={navigate} />{/* **绕不开的那条提醒。** 反证命中是"你自己写下的那件事真的发生了"，在确认之前它跟着你换页——见 CounterHitBanner 的说明。 */}{/* **首页原来不出这条**，理由是"那一屏的 Headline 已经把同一条命中放大到整屏了"。
@@ -7533,7 +7537,7 @@ export default function App() {
             远好过"最要紧的提醒在首页看不见"。
             （原注：Headline 当初就是把这条横幅和反方入口合并成一块放到第一屏的，
           再挂一条细横幅是同一件事说两遍。其余页面照旧跟着换页。 */}
-        {<Suspense fallback={null}><CounterHitBanner onOpenCompany={openCompany} /></Suspense>}{page === "dashboard" && <DashboardPage dashboard={dashboard} onOpenCompany={openCompany} onCreate={openCreate} onStartJudgment={startFirstJudgment} onRefreshMarket={() => void syncMarket()} refreshing={marketRefreshing} marketError={marketError} onNavigate={navigate} />}{page === "review" && <ReviewPage dashboard={dashboard} onOpenCompany={openCompany} onChanged={refreshDashboard} />}{page === "companies" && <CompaniesPage showCreate={showCreate} onOpenCompany={openCompany} onCloseCreate={() => setShowCreate((value) => !value)} onCreated={(company) => { void refreshDashboard(); openCompany(company.id); }} />}{page === "company" && selectedCompanyId !== null && <CompanyDetailPage assistantRevision={assistantRevision} companyId={selectedCompanyId} onBack={() => navigate("companies")} onArchiveChanged={refreshDashboard} />}{page === "portfolio" && <PortfolioPage onOpenCompany={openCompany} onLedgerChanged={refreshDashboard} />}{page === "reviews" && <ReviewsPage onOpenCompany={openCompany} onChanged={refreshDashboard} />}{page === "industries" && <IndustriesPage onOpenCompany={openCompany} />}{page === "screener" && <ScreenerPage onWrite={(symbol) => setWriting({ open: true, symbol })} />}{page === "heatmap" && <HeatmapPage onOpenCompany={openCompany} />}{page === "methods" && <MethodsPage onOpenCompany={openCompany} />}{page === "docs" && <section className="panel"><div className="panel-heading"><div><span className="eyebrow">读文档</span><PanelTitle hint="每个结论都带页码，能翻回原文核。">年报、公告、研报，读进来问它</PanelTitle></div></div><Suspense fallback={<div className="empty-state">正在加载…</div>}><Documents /></Suspense></section>}
+        {<Suspense fallback={null}><CounterHitBanner onOpenCompany={openCompany} /></Suspense>}{page === "dashboard" && <DashboardPage dashboard={dashboard} onOpenCompany={openCompany} onCreate={openCreate} onStartJudgment={startFirstJudgment} onRefreshMarket={() => void syncMarket()} refreshing={marketRefreshing} marketError={marketError} onNavigate={navigate} />}{page === "review" && <ReviewPage dashboard={dashboard} onOpenCompany={openCompany} onChanged={refreshDashboard} />}{page === "companies" && <CompaniesPage showCreate={showCreate} onOpenCompany={openCompany} onCloseCreate={() => setShowCreate((value) => !value)} onCreated={(company) => { void refreshDashboard(); openCompany(company.id); }} />}{page === "company" && selectedCompanyId !== null && <CompanyDetailPage assistantRevision={assistantRevision} companyId={selectedCompanyId} onBack={() => navigate("companies")} onArchiveChanged={refreshDashboard} />}{page === "portfolio" && <PortfolioPage onOpenCompany={openCompany} onLedgerChanged={refreshDashboard} />}{page === "reviews" && <ReviewsPage onOpenCompany={openCompany} onChanged={refreshDashboard} />}{page === "industries" && <IndustriesPage onOpenCompany={openCompany} />}{page === "screener" && <ScreenerPage onWrite={writeJudgment} />}{page === "heatmap" && <HeatmapPage onOpenCompany={openCompany} />}{page === "methods" && <MethodsPage onOpenCompany={openCompany} />}{page === "docs" && <section className="panel"><div className="panel-heading"><div><span className="eyebrow">读文档</span><PanelTitle hint="每个结论都带页码，能翻回原文核。">年报、公告、研报，读进来问它</PanelTitle></div></div><Suspense fallback={<div className="empty-state">正在加载…</div>}><Documents /></Suspense></section>}
       {page === "loop" && <Suspense fallback={<div className="empty-state page-loading">正在打开我的跟踪…</div>}><DecisionLoop key={assistantRevision} onOpenCompany={openCompany} onOpenPortfolio={() => navigate("portfolio")} renderReview={id => <ReviewsPage onlyCompanyId={id} onOpenCompany={openCompany} onChanged={refreshDashboard} />} /></Suspense>}
       {page === "swing" && <Suspense fallback={<div className="empty-state page-loading">正在打开做 T 回测…</div>}><SwingLab onOpenCompany={openCompany} /></Suspense>}
       {page === "rally" && <Suspense fallback={<div className="empty-state page-loading">正在打开涨跌归因…</div>}><RallyType onOpenCompany={openCompany} /></Suspense>}

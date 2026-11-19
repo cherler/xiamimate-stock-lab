@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { ROUTE_BASE } from "../config";
+import { ROUTE_BASE, STATIC_PREVIEW } from "../config";
 
 /**
  * 挂载主站导出的站点页眉与页脚。
@@ -47,7 +47,7 @@ function ChromeSlot({ part, padding }: { part: "header" | "footer"; padding: str
   const ref = useRef<HTMLDivElement>(null);
   const mounted = useRef(false);
   useEffect(() => {
-    if (!ROUTE_BASE || mounted.current) return;
+    if (STATIC_PREVIEW || !ROUTE_BASE || mounted.current) return;
     let live = true;
     void loadChrome().then((api) => {
       if (!live || !api || !ref.current) return;
@@ -58,7 +58,7 @@ function ChromeSlot({ part, padding }: { part: "header" | "footer"; padding: str
     });
     return () => { live = false; };
   }, [part, padding]);
-  if (!ROUTE_BASE) return null;
+  if (STATIC_PREVIEW || !ROUTE_BASE) return null;
   return <div ref={ref} className={`xm-chrome-host xm-chrome-host--${part}`} />;
 }
 

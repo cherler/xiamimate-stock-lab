@@ -2,14 +2,16 @@
 
 访问：<https://cherler.github.io/xiamimate-stock-lab/>
 
-完整源码、后端和助手都在本仓库。`pages/` 是同一项目的独立静态入口，不另建简化版仓库，也不把完整工作台的服务端接口伪装成已经可用。
+完整源码、后端和助手都在本仓库。Pages 直接复用 `apps/web/src/App.tsx`、原站样式、导航和页面组件，只有数据传输方式不同。不再另外维护一套演示工作台。
 
 ## 当前可以使用
 
 | 功能 | 数据与保存方式 |
 |---|---|
-| 三组公司研究样例、价格图、事实与反证 | 全部为代码中手写的虚构教学样例，不对应真实证券 |
-| 三情景估值 | 复用 `apps/web/src/lib/valuation.ts`；输入只保留在当前页面 |
+| 今天、公司档案、财务图表、判断与证据 | 六家虚构公司、每家 400 个演示交易日与多期虚构财务 |
+| 原站三情景估值 | 复用原组件与公式；试算不保存到服务器 |
+| 我的跟踪、应对报告、持仓账本 | 隔离样例库生成的虚构记录，不是作者持仓或真实分析 |
+| 产业链地图、方法库、行业对照 | 原站组件和公开底图；公司位置如有展示均标为示例 |
 | 个人判断笔记 | 浏览器 localStorage，支持保存、修改、删除与 JSON 导入导出 |
 | 安装与飞书说明 | 页面内的使用指南和完整仓库文档 |
 
@@ -28,7 +30,13 @@ npm run build:pages
 npm run preview:pages
 ```
 
-打开 `http://127.0.0.1:5228/xiamimate-stock-lab/`。开发时可使用 `npm run dev:pages`。构建输出为 `dist/pages/`，不会覆盖 `apps/web/dist/`。所有前端路由使用 `#research`、`#valuation`、`#notebook` 和 `#guide`，刷新不需要服务器重写规则。
+打开 `http://127.0.0.1:5228/xiamimate-stock-lab/`。开发时可使用 `npm run dev:pages`。构建输出为 `dist/pages/`，不会覆盖 `apps/web/dist/`。使用 `#/companies/1`、`#/decision-loop` 等 Hash 路由，查询参数仍在 `?tab=finance` 中，刷新不需要服务器重写规则。个人笔记沿用首版的本地存储键和 JSON 格式，不丢弃旧笔记。
+
+## 页面与数据维护
+
+改原站组件会同步影响 Pages。`STATIC_PREVIEW` 只在 Pages 构建开启，`apiFetch` 转到 `pages/src/adapter.ts` 读取静态响应；未知接口和服务器写入明确报出功能边界，不回退访问线上。文件上传单独阻断，主站外壳和监测不加载。
+
+`scripts/build-pages-fixtures.py` 使用临时 SQLite 和硬编码虚构公司生成响应，禁止网络、屏蔽 `.env`，不启动应用后台任务。运行 `.venv/bin/python scripts/build-pages-fixtures.py` 可重新生成 `pages/src/fixtures.json`。数据从项目实际 API 生成，避免手工造返回格式。更新后运行 `npm run test:pages`；该检查包含原站页面的 DOM 集成测试、笔记持久化及禁止外部 API 调用的断言，不替代真实浏览器视觉验收。
 
 ## 在自己的 GitHub 上部署
 

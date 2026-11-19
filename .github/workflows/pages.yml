@@ -4,7 +4,8 @@ on:
     branches: [main]
     paths:
       - 'pages/**'
-      - 'apps/web/src/lib/valuation.ts'
+      - 'apps/web/**'
+      - 'scripts/test-pages-ui.mjs'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/pages.yml'

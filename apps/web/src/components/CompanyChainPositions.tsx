@@ -2,7 +2,7 @@ import { ArrowRight, Network } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { getCompanyIndustryChainPositions } from "../api";
-import { ROUTE_BASE } from "../config";
+import { appHref } from "../config";
 import type { CompanyIndustryChainPositions } from "../types";
 
 export function CompanyChainPositions({ companyId }: { companyId: number }) {
@@ -15,7 +15,7 @@ export function CompanyChainPositions({ companyId }: { companyId: number }) {
   }, [companyId]);
 
   if (!data) return null;
-  const href = `${ROUTE_BASE}/industry-chains?company=${companyId}${data.themes[0] ? `&theme=${data.themes[0].theme_id}` : ""}`;
+  const href = appHref(`/industry-chains?company=${companyId}${data.themes[0] ? `&theme=${data.themes[0].theme_id}` : ""}`);
   return <section className="company-chain-position panel">
     <div className="company-chain-position-head">
       <div><span className="eyebrow">产业链底图</span><h2>这家公司在链上的位置</h2></div>

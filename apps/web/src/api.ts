@@ -1,4 +1,4 @@
-import { apiUrl } from "./config";
+import { apiUrl, STATIC_PREVIEW } from "./config";
 import type { DigestTable } from "./lib/digest";
 import type {
   ChainCompareView,
@@ -179,6 +179,10 @@ import { isModelCall, timeoutFor } from "./lib/timeouts";
 
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  if (STATIC_PREVIEW) {
+    const { previewRequest } = await import("../../../pages/src/adapter");
+    return previewRequest<T>(path, options);
+  }
   // 调用方自己传了 signal 就尊重它（组件卸载时取消），否则挂一个超时的。
   // **两者不能互相覆盖**：传了 signal 又被超时掐掉，取消原因就说不清了。
   const budget = timeoutFor(path, options?.method ?? "GET");
@@ -869,6 +873,7 @@ export function deleteDocument(id: number): Promise<void> {
 
 /** 上传一份 PDF。**解析在本地做，不花积分** —— 所以这一步没有报价。 */
 export async function uploadDocument(file: File, companyId?: number): Promise<DocRow> {
+  if (STATIC_PREVIEW) throw new ApiError("Pages 不上传或解析文件。请在完整在线服务或本机部署中使用此功能。");
   const form = new FormData();
   form.append("file", file);
   if (companyId) form.append("company_id", String(companyId));
