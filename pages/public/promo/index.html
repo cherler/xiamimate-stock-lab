@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="虾米看股宣传演示：你为什么买这只股？">
+<title>你为什么买这只股？ · 虾米看股</title>
+<style>
+:root{color-scheme:light dark;--bg:#f4f8f8;--ink:#172f32;--muted:#52696c;--line:#d7e4e3;--card:#fff;--accent:#0b766f}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+main{width:min(1080px,calc(100% - 40px));margin:36px auto 48px}header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:28px}
+a{color:var(--accent);text-underline-offset:4px}header>a{font-weight:700;text-decoration:none}header span{color:var(--muted);font-size:13px}
+h1{font-size:clamp(26px,4vw,40px);line-height:1.25;letter-spacing:-.025em;margin:0 0 12px}
+.meta{margin:0 0 20px;color:var(--muted);font-size:14px}video{display:block;width:100%;aspect-ratio:16/9;background:#10262a;border-radius:14px;border:1px solid var(--line)}
+.note{max-width:75ch;color:var(--muted);font-size:14px;margin:20px 0}
+nav{display:flex;flex-wrap:wrap;gap:12px}nav a{display:inline-flex;align-items:center;min-height:44px;border:1px solid var(--line);border-radius:9px;padding:8px 18px;background:var(--card);text-decoration:none;font-size:14px}
+nav a:first-child{background:var(--accent);color:#fff;border-color:var(--accent)}a:focus-visible,video:focus-visible{outline:3px solid var(--accent);outline-offset:5px}
+footer{border-top:1px solid var(--line);margin-top:28px;padding-top:16px;font-size:12px;color:var(--muted)}
+@media(prefers-color-scheme:dark){:root{--bg:#142024;--ink:#e4eff0;--muted:#acbfc1;--line:#34494b;--card:#1c2d31;--accent:#44beb2}nav a:first-child{color:#10262a}}
+@media(max-width:560px){main{width:calc(100% - 28px);margin-top:22px}header{margin-bottom:24px}nav a{flex:1;justify-content:center}video{border-radius:9px}}
+</style>
+</head>
+<body>
+<main>
+<header><a href="../">虾米看股</a><span>项目演示</span></header>
+<h1>你为什么买这只股？</h1>
+<p class="meta">41 秒 · 1920 × 1080 · 含声音，可全屏播放</p>
+<video controls playsinline preload="metadata" poster="./cover.png" aria-label="虾米看股宣传视频：你为什么买这只股？">
+<source src="./demo.mp4" type="video/mp4">
+你的浏览器暂不支持在线播放，请<a href="./demo.mp4" download>下载视频</a>观看。
+</video>
+<p class="note">视频展示录制时的完整服务，不构成投资建议。Pages 使用虚构样例，可进行估值试算和本地笔记管理。</p>
+<nav aria-label="继续了解项目"><a href="../">在线体验</a><a href="https://github.com/cherler/xiamimate-stock-lab#readme">查看 README</a><a href="./demo.mp4" download>下载视频</a></nav>
+<footer>视频保留录制时版本，功能说明与最新入口以项目 README 为准。</footer>
+</main>
+</body>
+</html>
